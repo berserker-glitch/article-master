@@ -1,5 +1,5 @@
-import { ComponentExample } from "@/components/component-example";
+import { CaptionExtractorExample } from "@/components/caption-extractor-example";
 
 export default function Page() {
-return <ComponentExample />;
+  return <CaptionExtractorExample />
 }

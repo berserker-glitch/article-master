@@ -2,7 +2,6 @@
 
 import * as React from "react"
 
-import { Example } from "@/components/example"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
@@ -107,56 +106,54 @@ export function CaptionExtractorExample() {
   }
 
   return (
-    <Example title="Caption Extractor">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>YouTube caption extractor</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="yt-url">YouTube URL (or ID)</FieldLabel>
-              <Input
-                id="yt-url"
-                value={youtubeUrlOrId}
-                onChange={(e) => setYoutubeUrlOrId(e.target.value)}
-                placeholder="https://www.youtube.com/watch?v=5I1jTJ9sYeA"
-              />
-            </Field>
-            <Button type="button" onClick={fetchCaptions} disabled={isFetching}>
-              {isFetching ? "Fetching..." : "Fetch captions"}
-            </Button>
-          </FieldGroup>
+    <Card className="mx-auto my-10 w-full max-w-md">
+      <CardHeader>
+        <CardTitle>YouTube caption extractor</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <FieldGroup>
+          <Field>
+            <FieldLabel htmlFor="yt-url">YouTube URL (or ID)</FieldLabel>
+            <Input
+              id="yt-url"
+              value={youtubeUrlOrId}
+              onChange={(e) => setYoutubeUrlOrId(e.target.value)}
+              placeholder="https://www.youtube.com/watch?v=5I1jTJ9sYeA"
+            />
+          </Field>
+          <Button type="button" onClick={fetchCaptions} disabled={isFetching}>
+            {isFetching ? "Fetching..." : "Fetch captions"}
+          </Button>
+        </FieldGroup>
 
-          {error && <p className="text-destructive text-sm">Error: {error}</p>}
+        {error && <p className="text-destructive text-sm">Error: {error}</p>}
 
-          {!!videoDetails.title && (
-            <div className="space-y-2">
-              <div className="text-sm font-medium">Title</div>
-              <div className="text-sm text-muted-foreground whitespace-pre-wrap">
-                {videoDetails.title}
-              </div>
+        {!!videoDetails.title && (
+          <div className="space-y-2">
+            <div className="text-sm font-medium">Title</div>
+            <div className="text-sm text-muted-foreground whitespace-pre-wrap">
+              {videoDetails.title}
             </div>
-          )}
+          </div>
+        )}
 
-          {!!videoDetails.description && (
-            <div className="space-y-2">
-              <div className="text-sm font-medium">Description</div>
-              <div className="text-sm text-muted-foreground whitespace-pre-wrap">
-                {videoDetails.description}
-              </div>
+        {!!videoDetails.description && (
+          <div className="space-y-2">
+            <div className="text-sm font-medium">Description</div>
+            <div className="text-sm text-muted-foreground whitespace-pre-wrap">
+              {videoDetails.description}
             </div>
-          )}
+          </div>
+        )}
 
-          {subtitles.length > 0 && (
-            <div className="space-y-2">
-              <div className="text-sm font-medium">Transcript</div>
-              <Textarea value={transcript} readOnly className="min-h-32" />
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </Example>
+        {subtitles.length > 0 && (
+          <div className="space-y-2">
+            <div className="text-sm font-medium">Transcript</div>
+            <Textarea value={transcript} readOnly className="min-h-32" />
+          </div>
+        )}
+      </CardContent>
+    </Card>
   )
 }
 
