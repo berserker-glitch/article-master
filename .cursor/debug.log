@@ -1,0 +1,2 @@
+{"sessionId":"debug-session","runId":"pre-fix","hypothesisId":"H1","location":"lib/db/prisma.ts:3","message":"Prisma module load env snapshot","data":{"nodeEnv":"development","databaseUrlPresent":true,"databaseUrlProtocol":"missing","databaseUrlIsMysql":false,"databaseUrlLength":20},"timestamp":1765885237058}
+{"sessionId":"debug-session","runId":"pre-fix","hypothesisId":"H1","location":"lib/db/prisma.ts:30","message":"PrismaClient initialized (or reused)","data":{"reusedFromGlobal":true},"timestamp":1765885237060}

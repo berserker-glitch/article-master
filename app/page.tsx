@@ -1,5 +1,5 @@
-import { CaptionExtractorExample } from "@/components/caption-extractor-example";
+import { LandingPage } from "@/components/landing/landing"
 
 export default function Page() {
-  return <CaptionExtractorExample />
+  return <LandingPage />
 }
