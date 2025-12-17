@@ -4,8 +4,20 @@ NIXPACKS_PYTHON_VERSION = "3.11"
 [phases.setup]
 nixPkgs = ["python311", "python311Packages.pip"]
 
+# Explicitly override install phase to use npm instead of bun
+# This overrides Nixpacks' auto-detection of bun from bun.lock
+[phases.install]
+cmds = [
+  "npm install"
+]
+cacheDirectories = [
+  "/root/.npm"
+]
+paths = [
+  "/app/node_modules/.bin"
+]
+
 # Python deps will be installed via the prebuild script in package.json
-# Nixpacks will automatically use npm for Node.js projects
 
 [phases.build]
 cmds = [
