@@ -10,8 +10,8 @@ const bullets = [
     icon: IconWriting,
   },
   {
-    title: "SEO-first sections",
-    description: "Intent-matching intro, key takeaways, FAQs, and a conclusion that converts.",
+    title: "SEO-friendly structure",
+    description: "Our SEO blog AI creates intent-matching intros, key takeaways, FAQs, and conversion-focused conclusions optimized for search engines.",
     icon: IconListDetails,
   },
   {
@@ -36,10 +36,10 @@ export function LandingOutputPreview() {
               <Badge variant="secondary">What you get</Badge>
             </div>
             <h2 className="text-2xl md:text-3xl font-semibold tracking-tight">
-              Publish-ready output that doesn’t feel “generated”
+              SEO-Friendly Blog Articles Ready for Publishing
             </h2>
             <p className="text-sm md:text-base text-muted-foreground">
-              ArticleMaster turns a messy transcript into a complete, reader-friendly article that’s designed to rank.
+              Our AI transcriber and SEO blog AI tool transforms YouTube video transcripts into complete, SEO-optimized articles designed to rank in search engines.
             </p>
 
             <div className="grid gap-3 pt-2">
@@ -93,4 +93,3 @@ export function LandingOutputPreview() {
     </section>
   )
 }
-

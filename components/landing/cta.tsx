@@ -15,11 +15,11 @@ export function LandingCTA() {
             <div className="absolute -bottom-24 left-10 h-64 w-64 rounded-full bg-sky-500/10 blur-3xl" />
           </div>
           <CardHeader className="relative">
-            <CardTitle className="text-xl md:text-2xl">Ready to turn videos into SEO content?</CardTitle>
+            <CardTitle className="text-xl md:text-2xl">Ready to Convert YouTube Videos to SEO-Friendly Blog Articles?</CardTitle>
           </CardHeader>
           <CardContent className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <p className="text-sm md:text-base text-muted-foreground max-w-2xl">
-              Generate long-form, publish-ready articles with strong structure, better depth, and cost visibility.
+              Start using our AI transcriber and SEO blog AI tool to transform YouTube videos into optimized, long-form blog content. Generate SEO-friendly articles ready for WordPress publishing.
             </p>
             <Button asChild size="lg">
               <Link href="/signup">

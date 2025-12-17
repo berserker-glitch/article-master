@@ -4,13 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 const features = [
   {
-    title: "Transcript → outline",
-    description: "Turn raw subtitles into a clean, human-friendly structure you can publish.",
+    title: "AI Transcriber for YouTube",
+    description: "Convert YouTube video transcripts into clean, structured blog outlines with our AI transcriber technology.",
     icon: IconSchema,
   },
   {
-    title: "SEO-first writing",
-    description: "Intent-aligned intros, H2/H3 hierarchy, FAQs, and keyword-aware coverage.",
+    title: "SEO-Friendly Content Generation",
+    description: "Our SEO blog AI creates intent-aligned intros, proper H2/H3 hierarchy, FAQs, and keyword-optimized coverage for better rankings.",
     icon: IconPrompt,
   },
   {
@@ -41,9 +41,9 @@ export function LandingFeatureGrid() {
       <div className="mx-auto max-w-6xl px-6">
         <div className="flex items-end justify-between gap-4 mb-6">
           <div className="space-y-1">
-            <h2 className="text-2xl md:text-3xl font-semibold tracking-tight">Built for SEO workflows</h2>
+            <h2 className="text-2xl md:text-3xl font-semibold tracking-tight">SEO-Friendly Blog Generation from YouTube Videos</h2>
             <p className="text-sm md:text-base text-muted-foreground">
-              Better structure, better depth, and better output quality—without the empty UI.
+              Our AI transcriber and SEO blog AI tool creates structured, keyword-optimized articles perfect for search engines and readers.
             </p>
           </div>
         </div>

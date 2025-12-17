@@ -6,9 +6,9 @@ export function LandingFooter() {
       <div className="mx-auto max-w-6xl px-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="md:col-span-2 space-y-2">
-            <div className="font-semibold tracking-tight">ArticleMaster</div>
+            <div className="font-semibold tracking-tight">ArticleAlchemist</div>
             <p className="text-sm text-muted-foreground max-w-md">
-              Generate structured, SEO-focused long-form articles from YouTube—then publish to WordPress.
+              SEO-friendly AI blog generator that converts YouTube videos to optimized blog articles. Our AI transcriber and SEO blog AI tool transforms video transcripts into long-form, keyword-optimized content perfect for search engines.
             </p>
           </div>
           <div className="space-y-2">
@@ -45,8 +45,8 @@ export function LandingFooter() {
         </div>
 
         <div className="mt-10 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between text-sm text-muted-foreground">
-          <div>© {new Date().getFullYear()} ArticleMaster</div>
-          <div>Built for long-form SEO output.</div>
+          <div>© {new Date().getFullYear()} ArticleAlchemist by Scolink. All rights reserved.</div>
+          <div>SEO-friendly YouTube to blog converter powered by AI.</div>
         </div>
       </div>
     </footer>

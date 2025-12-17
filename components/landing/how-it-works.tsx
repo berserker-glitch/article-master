@@ -5,12 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 const steps = [
   {
     title: "Paste a YouTube link",
-    description: "We fetch subtitles + video metadata and turn it into structured source material.",
+    description: "Our AI transcriber extracts video transcripts and metadata, converting YouTube content into structured source material for blog generation.",
     icon: IconClipboardText,
   },
   {
-    title: "Generate long-form SEO content",
-    description: "A multi-step pipeline writes, critiques, and rewrites into a polished, publish-ready article.",
+    title: "Generate SEO-friendly blog content",
+    description: "Our SEO blog AI uses a multi-step pipeline to write, critique, and rewrite content into polished, SEO-optimized articles ready for publishing.",
     icon: IconSparkles,
   },
   {
@@ -26,9 +26,9 @@ export function LandingHowItWorks() {
       <div className="mx-auto max-w-6xl px-6">
         <div className="flex items-end justify-between gap-4 mb-6">
           <div className="space-y-1">
-            <h2 className="text-2xl md:text-3xl font-semibold tracking-tight">How it works</h2>
+            <h2 className="text-2xl md:text-3xl font-semibold tracking-tight">How Our YouTube to Blog Converter Works</h2>
             <p className="text-sm md:text-base text-muted-foreground">
-              From transcript to a structured, SEO-first article—then straight to WordPress.
+              Transform YouTube videos into SEO-friendly blog articles using our AI transcriber and SEO blog AI technology.
             </p>
           </div>
         </div>

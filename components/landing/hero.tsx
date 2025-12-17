@@ -19,18 +19,17 @@ export function LandingHero() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
           <div className="space-y-6">
             <div className="flex flex-wrap gap-2">
-              <Badge variant="secondary">SEO-first long-form</Badge>
-              <Badge variant="secondary">1500+ words</Badge>
-              <Badge variant="secondary">WordPress publish</Badge>
-              <Badge variant="secondary">Cost tracking</Badge>
+              <Badge variant="secondary">SEO-friendly</Badge>
+              <Badge variant="secondary">YouTube to blog</Badge>
+              <Badge variant="secondary">AI transcriber</Badge>
+              <Badge variant="secondary">SEO blog AI</Badge>
             </div>
 
             <h1 className="text-4xl md:text-5xl font-semibold tracking-tight">
-              Turn YouTube videos into structured, SEO‑optimized articles—fast
+              SEO-Friendly AI Blog Generator: Convert YouTube Videos to Blog Articles
             </h1>
             <p className="text-base md:text-lg text-muted-foreground">
-              Paste a link. We extract the transcript, build a clean outline, write a long-form draft, critique it,
-              then rewrite into a final article you can publish to WordPress.
+              Transform YouTube videos into SEO-friendly, long-form blog articles with our AI transcriber. Our SEO blog AI tool extracts transcripts, creates structured outlines, and generates optimized content ready for WordPress publishing.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3">

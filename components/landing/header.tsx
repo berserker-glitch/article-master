@@ -8,8 +8,8 @@ export function LandingHeader() {
     <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur">
       <div className="mx-auto max-w-6xl px-6 h-16 flex items-center justify-between">
         <div className="flex items-center gap-6">
-          <Link href="/" className="font-semibold tracking-tight">
-            ArticleMaster
+          <Link href="/" className="font-semibold tracking-tight" aria-label="ArticleAlchemist - SEO-Friendly AI Blog Generator">
+            ArticleAlchemist
           </Link>
           <nav className="hidden md:flex items-center gap-4 text-sm text-muted-foreground">
             <a className="hover:text-foreground transition-colors" href="#features">
