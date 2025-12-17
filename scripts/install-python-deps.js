@@ -39,19 +39,56 @@ try {
 
   console.log(`Using Python: ${pythonCmd}`);
 
+  // Check if we're in a Nix environment (externally managed)
+  // If so, create a virtual environment to install packages
+  const venvPath = join(__dirname, "..", ".venv");
+  let useVenv = false;
+
+  try {
+    // Try to create a virtual environment
+    execSync(`${pythonCmd} -m venv "${venvPath}"`, { stdio: "ignore" });
+    useVenv = true;
+    console.log("Created virtual environment for Python packages");
+  } catch (error) {
+    // If venv creation fails, try without it (might work in some environments)
+    console.warn("Warning: Could not create virtual environment, trying system install...");
+  }
+
+  let finalPipCmd = pipCmd;
+  if (useVenv) {
+    // Use pip from the virtual environment
+    const venvPip = process.platform === "win32" 
+      ? join(venvPath, "Scripts", "pip")
+      : join(venvPath, "bin", "pip");
+    finalPipCmd = venvPip;
+  }
+
   // Upgrade pip
   try {
-    execSync(`${pipCmd} install --upgrade pip`, { stdio: "inherit" });
+    execSync(`${finalPipCmd} install --upgrade pip`, { stdio: "inherit" });
   } catch (error) {
     console.warn("Warning: Failed to upgrade pip, continuing anyway...");
   }
 
   // Install dependencies
   console.log("Installing youtube-transcript-api...");
-  execSync(`${pipCmd} install --no-cache-dir -r "${requirementsPath}"`, {
-    stdio: "inherit",
-    cwd: join(__dirname, ".."),
-  });
+  try {
+    execSync(`${finalPipCmd} install --no-cache-dir -r "${requirementsPath}"`, {
+      stdio: "inherit",
+      cwd: join(__dirname, ".."),
+    });
+  } catch (error) {
+    // If virtual env approach fails, try with --break-system-packages as last resort
+    if (useVenv) {
+      console.warn("Virtual environment install failed, trying with --break-system-packages...");
+      execSync(`${pipCmd} install --break-system-packages --no-cache-dir -r "${requirementsPath}"`, {
+        stdio: "inherit",
+        cwd: join(__dirname, ".."),
+      });
+    } else {
+      throw error;
+    }
+  }
 
   console.log("Python dependencies installed successfully!");
 } catch (error) {

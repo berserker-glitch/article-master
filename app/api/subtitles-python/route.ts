@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { type NextRequest } from "next/server"
 import { spawn } from "child_process"
 import { join } from "path"
+import { existsSync } from "fs"
 
 export const runtime = "nodejs"
 
@@ -22,19 +23,16 @@ export async function GET(request: NextRequest) {
     // Path to the Python script
     const scriptPath = join(process.cwd(), "caption-extractor-2", "extract.py")
     
-    // Try multiple Python commands in order of preference
-    // In Nixpacks/Coolify, Python might be in different locations
-    const pythonCommands = [
-      "python3",
-      "python",
-      "/nix/store/*/bin/python3", // Nix store path (wildcard won't work, but shows intent)
-      "/usr/bin/python3",
-      "/usr/local/bin/python3",
-    ]
+    // Try to use virtual environment Python if it exists, otherwise fall back to system Python
+    const venvPythonPath = join(process.cwd(), ".venv", "bin", "python3")
+    const venvPythonPathWin = join(process.cwd(), ".venv", "Scripts", "python.exe")
     
-    // For now, use python3 (most common in Linux/Coolify)
-    // If this fails, the error handler will provide helpful feedback
-    const pythonCmd = process.platform === "win32" ? "python" : "python3"
+    let pythonCmd = "python3"
+    if (process.platform === "win32") {
+      pythonCmd = existsSync(venvPythonPathWin) ? venvPythonPathWin : "python"
+    } else {
+      pythonCmd = existsSync(venvPythonPath) ? venvPythonPath : "python3"
+    }
     
     // Spawn Python process
     const pythonProcess = spawn(pythonCmd, [scriptPath, videoID, lang], {
