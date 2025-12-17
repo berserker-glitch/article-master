@@ -123,16 +123,28 @@ export async function POST(req: Request) {
 
   if (!subsRes.ok) {
     const payload = await subsRes.json().catch(() => ({}))
+    const errorMessage = payload?.error || "Failed to fetch subtitles"
+    const isIPBlocked = errorMessage.includes("IP") || 
+                       errorMessage.includes("blocked") || 
+                       errorMessage.includes("cloud provider") ||
+                       payload?.isIPBlocked
+    
     return NextResponse.json(
       { 
-        error: payload?.error || "Failed to fetch subtitles",
+        error: isIPBlocked
+          ? "YouTube is temporarily blocking requests from this server. This is a known limitation with cloud hosting providers. Please try again in a few minutes."
+          : errorMessage,
         status: subsRes.status,
         statusText: subsRes.statusText,
         videoId,
         url: subtitlesUrl,
-        attemptedLanguages: payload?.attemptedLanguages
+        attemptedLanguages: payload?.attemptedLanguages,
+        isIPBlocked,
+        ...(isIPBlocked ? {
+          suggestion: "This is usually temporary. The service will automatically retry, or you can try again later."
+        } : {})
       },
-      { status: 400 }
+      { status: isIPBlocked ? 503 : 400 }
     )
   }
 

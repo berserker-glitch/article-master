@@ -123,13 +123,27 @@ export async function GET(request: NextRequest) {
         const result = JSON.parse(stdout.trim())
         
         if (result.error) {
+          // Check if this is an IP blocking error
+          const errorMessage = result.error || ""
+          const isIPBlocked = errorMessage.includes("IP") || 
+                             errorMessage.includes("blocked") || 
+                             errorMessage.includes("cloud provider") ||
+                             errorMessage.includes("too many requests") ||
+                             errorMessage.includes("blocking requests")
+          
           resolve(
             NextResponse.json(
               {
-                error: result.error,
+                error: isIPBlocked
+                  ? "YouTube is blocking requests from this server's IP address. This is a known limitation when using cloud hosting providers."
+                  : result.error,
                 videoID: result.video_id || videoID,
+                isIPBlocked,
+                ...(isIPBlocked ? {
+                  suggestion: "This is a temporary limitation. Please try again later or contact support if the issue persists."
+                } : {})
               },
-              { status: 404 }
+              { status: isIPBlocked ? 503 : 404 }
             )
           )
           return

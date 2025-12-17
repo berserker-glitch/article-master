@@ -58,20 +58,49 @@ export async function GET(request: NextRequest) {
               { status: 200 }
             )
           }
+        } else {
+          // Check if Python fallback returned an IP blocking error
+          const pythonError = await pythonFallbackRes.json().catch(() => ({}))
+          if (pythonError.isIPBlocked) {
+            return NextResponse.json(
+              {
+                error: pythonError.error || "YouTube is blocking requests from this server's IP address",
+                videoID,
+                attemptedLanguages: languagesToTry,
+                note: "Both JavaScript and Python extractors failed due to IP blocking",
+                isIPBlocked: true,
+                suggestion: pythonError.suggestion || "This is a temporary limitation. Please try again later."
+              },
+              { status: 503 }
+            )
+          }
         }
       } catch (fallbackError) {
         // Python fallback also failed, return original error
       }
       
+      // Check if this is an IP blocking error
+      const errorMessage = (error as Error).message || "Failed to fetch subtitles"
+      const isIPBlocked = errorMessage.includes("IP") || 
+                         errorMessage.includes("blocked") || 
+                         errorMessage.includes("cloud provider") ||
+                         errorMessage.includes("too many requests")
+      
       // Both extractors failed, return the error
       return NextResponse.json(
         { 
-          error: (error as Error).message || "Failed to fetch subtitles",
+          error: isIPBlocked 
+            ? "YouTube is blocking requests from this server's IP address. This is a known limitation when using cloud hosting providers. Please try again later or contact support."
+            : errorMessage,
           videoID,
           attemptedLanguages: languagesToTry,
-          note: "Both JavaScript and Python extractors failed"
+          note: "Both JavaScript and Python extractors failed",
+          isIPBlocked,
+          ...(isIPBlocked ? {
+            suggestion: "This is a temporary limitation. The service will retry automatically, or you can try again in a few minutes."
+          } : {})
         },
-        { status: 500 }
+        { status: isIPBlocked ? 503 : 500 }
       )
     }
   }
@@ -93,6 +122,22 @@ export async function GET(request: NextRequest) {
             source: "python-fallback"
           },
           { status: 200 }
+        )
+      }
+    } else {
+      // Check if Python fallback returned an IP blocking error
+      const pythonError = await pythonFallbackRes.json().catch(() => ({}))
+      if (pythonError.isIPBlocked) {
+        return NextResponse.json(
+          {
+            error: pythonError.error || "YouTube is blocking requests from this server's IP address",
+            videoID,
+            attemptedLanguages: languagesToTry,
+            note: "Both JavaScript and Python extractors failed due to IP blocking",
+            isIPBlocked: true,
+            suggestion: pythonError.suggestion || "This is a temporary limitation. Please try again later."
+          },
+          { status: 503 }
         )
       }
     }
