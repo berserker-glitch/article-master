@@ -2,10 +2,8 @@
   "name": "next-app",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "bun@1.1.45",
   "engines": {
-    "node": ">=20",
-    "bun": ">=1.1.0"
+    "node": ">=20"
   },
   "scripts": {
     "dev": "next dev",
