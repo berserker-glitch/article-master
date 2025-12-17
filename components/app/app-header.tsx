@@ -2,13 +2,13 @@
 
 import Link from "next/link"
 
-import { IconArticle, IconLayoutDashboard, IconSettings } from "@tabler/icons-react"
+import { IconArticle, IconLayoutDashboard, IconSettings, IconShield } from "@tabler/icons-react"
 
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { NavLink } from "@/components/app/nav-link"
 
-export function AppHeader(props: { username: string }) {
+export function AppHeader(props: { username: string; role: "USER" | "SUPERADMIN" }) {
   return (
     <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur">
       <div className="mx-auto max-w-6xl px-6 h-16 flex items-center justify-between">
@@ -36,6 +36,14 @@ export function AppHeader(props: { username: string }) {
                 WordPress
               </span>
             </NavLink>
+            {props.role === "SUPERADMIN" && (
+              <NavLink href="/admin/users">
+                <span className="inline-flex items-center gap-2">
+                  <IconShield className="h-4 w-4" />
+                  Admin
+                </span>
+              </NavLink>
+            )}
           </nav>
         </div>
 

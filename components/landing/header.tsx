@@ -21,6 +21,9 @@ export function LandingHeader() {
             <a className="hover:text-foreground transition-colors" href="#output">
               Output
             </a>
+            <a className="hover:text-foreground transition-colors" href="#pricing">
+              Pricing
+            </a>
           </nav>
         </div>
 

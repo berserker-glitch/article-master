@@ -1,9 +1,11 @@
 import { prisma } from "@/lib/db/prisma"
 import { requireUser } from "@/lib/auth/guards"
 import { DashboardShell } from "@/components/dashboard/dashboard-shell"
+import { redirect } from "next/navigation"
 
 export default async function DashboardPage() {
   const user = await requireUser()
+  if (!user.planChosenAt) redirect("/choose-plan")
   const [recent, totals, sitesCount] = await Promise.all([
     prisma.article.findMany({
       where: { userId: user.id },

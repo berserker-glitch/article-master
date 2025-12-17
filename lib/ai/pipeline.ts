@@ -189,6 +189,28 @@ export async function runArticlePipeline(articleId: string) {
       data: { draftMarkdown, progress: 40 },
     })
 
+    // Plan-based quality:
+    // - FREE: basic generation (chapters + draft only)
+    // - PRO: full pipeline (critique + rewrite + optional expand)
+    // - PREMIUM: full pipeline + user prefs + stronger expansion threshold
+    if (plan === "FREE") {
+      const wordCount = countWords(draftMarkdown)
+      await prisma.article.update({
+        where: { id: articleId },
+        data: {
+          finalMarkdown: draftMarkdown,
+          status: "COMPLETE",
+          progress: 100,
+          wordCount,
+          promptTokens,
+          completionTokens,
+          totalTokens,
+          estimatedCostUsd: Number.isFinite(estimatedCostUsd) ? estimatedCostUsd : null,
+        },
+      })
+      return
+    }
+
     // Step 3: Critique (structured)
     const criticModelId = modelFromEnv("OPENROUTER_MODEL_CRITIC", criticModelDefault)
     const criticModel = openrouter(criticModelId)
@@ -251,13 +273,14 @@ export async function runArticlePipeline(articleId: string) {
 
     // Step 5 (best-effort): Expand if too short
     let wordCount = countWords(finalMarkdown)
+    const minWordsForExpand = plan === "PREMIUM" ? 1800 : 1500
     
     await prisma.article.update({
       where: { id: articleId },
       data: { progress: 90 },
     })
     
-    if (wordCount < 1500) {
+    if (wordCount < minWordsForExpand) {
       const expandRes = await generateText({
         model: writerModel,
         prompt: expandPrompt({
