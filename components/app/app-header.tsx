@@ -49,7 +49,7 @@ export function AppHeader(props: { username: string; role: "USER" | "SUPERADMIN"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
                 }`}
               >
-                <span className="inline-flex items-center gap-2">
+              <span className="inline-flex items-center gap-2">
                   <IconSettings className="h-4 w-4" />
                   Settings
                 </span>
@@ -60,8 +60,8 @@ export function AppHeader(props: { username: string; role: "USER" | "SUPERADMIN"
                   Plans & Billing
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => router.push("/settings/wordpress")} className="flex items-center gap-2">
-                  <IconSettings className="h-4 w-4" />
-                  WordPress
+                <IconSettings className="h-4 w-4" />
+                WordPress
                 </DropdownMenuItem>
                 {props.plan === "PREMIUM" && (
                   <DropdownMenuItem onClick={() => router.push("/settings/generation")} className="flex items-center gap-2">
@@ -76,8 +76,8 @@ export function AppHeader(props: { username: string; role: "USER" | "SUPERADMIN"
                 <span className="inline-flex items-center gap-2">
                   <IconShield className="h-4 w-4" />
                   Admin
-                </span>
-              </NavLink>
+              </span>
+            </NavLink>
             )}
           </nav>
         </div>

@@ -1,35 +1,33 @@
 import * as React from "react"
 
+import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { LandingHeader } from "@/components/landing/header"
-import { LandingFooter } from "@/components/landing/footer"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
 
-export function LegalPage(props: { title: string; content: string }) {
+interface LegalPageProps {
+  title: string
+  content: string
+  breadcrumbs?: Array<{ label: string; href?: string }>
+}
+
+export function LegalPage({ title, content, breadcrumbs = [{ label: "Home", href: "/" }] }: LegalPageProps) {
   return (
-    <div className="min-h-screen">
-      <LandingHeader />
-      <main className="mx-auto max-w-6xl px-6 py-10">
-        <div className="mb-4">
-          <Button asChild variant="ghost">
-            <Link href="/">Back to home</Link>
-          </Button>
-        </div>
+    <div className="mx-auto max-w-4xl px-6 py-8">
+      <div className="mb-6">
+        <Breadcrumb items={breadcrumbs} />
+      </div>
 
-        <div className="mx-auto max-w-3xl">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xl md:text-2xl">{props.title}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <pre className="whitespace-pre-wrap text-sm leading-6 text-foreground">{props.content}</pre>
-            </CardContent>
-          </Card>
-        </div>
-      </main>
-      <LandingFooter />
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl md:text-2xl">{title}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="prose prose-sm max-w-none">
+            <pre className="whitespace-pre-wrap text-sm leading-6 text-foreground font-sans">
+              {content}
+            </pre>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
-

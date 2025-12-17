@@ -15,14 +15,16 @@ export function LandingCTA() {
             <div className="absolute -bottom-24 left-10 h-64 w-64 rounded-full bg-sky-500/10 blur-3xl" />
           </div>
           <CardHeader className="relative">
-            <CardTitle className="text-xl md:text-2xl">Ready to Convert YouTube Videos to SEO-Friendly Blog Articles?</CardTitle>
+            <CardTitle className="text-xl md:text-2xl">
+              Ready to Convert YouTube Videos to SEO-Friendly Blog Articles?
+            </CardTitle>
           </CardHeader>
           <CardContent className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <p className="text-sm md:text-base text-muted-foreground max-w-2xl">
-              Start using our AI transcriber and SEO blog AI tool to transform YouTube videos into optimized, long-form blog content. Generate SEO-friendly articles ready for WordPress publishing.
+              Start using our AI transcriber and SEO blog AI tool to transform YouTube videos into optimized, long-form blog content. Join thousands of content creators who trust ArticleAlchemist for their SEO blog generation needs.
             </p>
             <Button asChild size="lg">
-              <Link href="/signup">
+              <Link href="/signup" aria-label="Get started with ArticleAlchemist AI blog generator">
                 Get started <IconArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
@@ -32,4 +34,3 @@ export function LandingCTA() {
     </section>
   )
 }
-
