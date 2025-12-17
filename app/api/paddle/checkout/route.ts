@@ -67,6 +67,8 @@ export async function POST(req: Request) {
         error: message,
         code: payload?.error?.code ?? payload?.code ?? null,
         details: payload?.error?.errors ?? null,
+        // Helpful for debugging: the raw Paddle error payload (no secrets included).
+        paddle: payload?.error ?? payload ?? null,
       },
       { status: 400 }
     )
