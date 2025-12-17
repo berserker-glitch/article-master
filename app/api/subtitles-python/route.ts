@@ -22,8 +22,8 @@ export async function GET(request: NextRequest) {
     // Path to the Python script
     const scriptPath = join(process.cwd(), "caption-extractor-2", "extract.py")
     
-    // Determine Python command - try python3 first on Unix, python on Windows
-    // On Windows, python3 might also be available
+    // Determine Python command - prefer python3 (standard in Linux/Coolify), fallback to python
+    // In Coolify/Linux environments, python3 is typically available
     const pythonCmd = process.platform === "win32" ? "python" : "python3"
     
     // Spawn Python process

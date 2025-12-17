@@ -1,0 +1,17 @@
+[phases.setup]
+nixPkgs = ["python3", "python3Packages.pip"]
+
+[phases.install]
+cmds = [
+  "bun install",
+  "pip3 install --no-cache-dir -r caption-extractor-2/requirements.txt || echo 'Python deps install failed, continuing...'"
+]
+
+[phases.build]
+cmds = [
+  "bunx --bun prisma generate",
+  "bun run build"
+]
+
+[start]
+cmd = "bun run start"

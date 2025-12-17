@@ -9,6 +9,7 @@
   },
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node scripts/install-python-deps.js",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
