@@ -52,7 +52,9 @@ function Button({
       return null
     }
 
-    const child = children as React.ReactElement<{ className?: string }>
+    // When we clone the child we forward arbitrary props (and `data-*` like `data-slot`).
+    // Use an index signature so TS allows extra keys here.
+    const child = children as React.ReactElement<Record<string, unknown> & { className?: string }>
     return React.cloneElement(child, {
       "data-slot": "button",
       ...props,
