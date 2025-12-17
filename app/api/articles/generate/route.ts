@@ -43,7 +43,14 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}))
   const parsed = bodySchema.safeParse(body)
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 })
+    return NextResponse.json(
+      { 
+        error: "Invalid request",
+        details: parsed.error.flatten().fieldErrors,
+        received: body
+      },
+      { status: 400 }
+    )
   }
 
   const youtubeUrl = parsed.data.youtubeUrl
@@ -53,11 +60,22 @@ export async function POST(req: Request) {
   }
 
   // Get the correct base URL from headers (for proxy/production) or environment variable
+  // For internal API calls, we prefer using the same origin to avoid SSL/network issues
   function getBaseUrl(): string {
     // Check for forwarded protocol and host (common in production/proxy setups)
     const forwardedProto = req.headers.get("x-forwarded-proto")
     const forwardedHost = req.headers.get("x-forwarded-host")
     const host = req.headers.get("host")
+
+    // Try to use the request's origin first
+    try {
+      const requestUrl = new URL(req.url)
+      if (requestUrl.origin) {
+        return requestUrl.origin
+      }
+    } catch {
+      // If URL parsing fails, continue with header-based detection
+    }
 
     if (forwardedProto && forwardedHost) {
       return `${forwardedProto}://${forwardedHost}`
@@ -79,10 +97,29 @@ export async function POST(req: Request) {
 
   // Fetch subtitles and video details using the caption-extractor library
   // These routes use youtube-caption-extractor to get transcripts and metadata
-  const [subsRes, detailsRes] = await Promise.all([
-    fetch(`${baseUrl}/api/subtitles?videoID=${encodeURIComponent(videoId)}`, { cache: "no-store" }),
-    fetch(`${baseUrl}/api/videoDetails?videoID=${encodeURIComponent(videoId)}`, { cache: "no-store" }),
-  ])
+  const subtitlesUrl = `${baseUrl}/api/subtitles?videoID=${encodeURIComponent(videoId)}`
+  const detailsUrl = `${baseUrl}/api/videoDetails?videoID=${encodeURIComponent(videoId)}`
+
+  let subsRes: Response
+  let detailsRes: Response
+
+  try {
+    [subsRes, detailsRes] = await Promise.all([
+      fetch(subtitlesUrl, { cache: "no-store" }),
+      fetch(detailsUrl, { cache: "no-store" }),
+    ])
+  } catch (fetchError) {
+    return NextResponse.json(
+      {
+        error: "Failed to connect to internal API",
+        details: fetchError instanceof Error ? fetchError.message : String(fetchError),
+        baseUrl,
+        videoId,
+        suggestion: "This might be a network configuration issue. Please try again or contact support."
+      },
+      { status: 500 }
+    )
+  }
 
   if (!subsRes.ok) {
     const payload = await subsRes.json().catch(() => ({}))
@@ -90,7 +127,10 @@ export async function POST(req: Request) {
       { 
         error: payload?.error || "Failed to fetch subtitles",
         status: subsRes.status,
-        videoId 
+        statusText: subsRes.statusText,
+        videoId,
+        url: subtitlesUrl,
+        attemptedLanguages: payload?.attemptedLanguages
       },
       { status: 400 }
     )
@@ -102,7 +142,9 @@ export async function POST(req: Request) {
       { 
         error: payload?.error || "Failed to fetch video details",
         status: detailsRes.status,
-        videoId 
+        statusText: detailsRes.statusText,
+        videoId,
+        url: detailsUrl
       },
       { status: 400 }
     )

@@ -38,16 +38,66 @@ export async function GET(request: NextRequest) {
       if (tryLang !== languagesToTry[languagesToTry.length - 1]) {
         continue
       }
-      // If it's the last language, return the error
+      
+      // Primary extractor failed - try Python fallback
+      try {
+        const origin = new URL(request.url).origin
+        const pythonFallbackRes = await fetch(
+          `${origin}/api/subtitles-python?videoID=${encodeURIComponent(videoID)}&lang=${encodeURIComponent(lang)}`,
+          { cache: "no-store" }
+        )
+        
+        if (pythonFallbackRes.ok) {
+          const pythonResult = await pythonFallbackRes.json()
+          if (pythonResult.subtitles && Array.isArray(pythonResult.subtitles) && pythonResult.subtitles.length > 0) {
+            return NextResponse.json(
+              { 
+                subtitles: pythonResult.subtitles,
+                source: "python-fallback"
+              },
+              { status: 200 }
+            )
+          }
+        }
+      } catch (fallbackError) {
+        // Python fallback also failed, return original error
+      }
+      
+      // Both extractors failed, return the error
       return NextResponse.json(
         { 
           error: (error as Error).message || "Failed to fetch subtitles",
           videoID,
-          attemptedLanguages: languagesToTry
+          attemptedLanguages: languagesToTry,
+          note: "Both JavaScript and Python extractors failed"
         },
         { status: 500 }
       )
     }
+  }
+
+  // If we get here, no subtitles were found in any language - try Python fallback
+  try {
+    const origin = new URL(request.url).origin
+    const pythonFallbackRes = await fetch(
+      `${origin}/api/subtitles-python?videoID=${encodeURIComponent(videoID)}&lang=${encodeURIComponent(lang)}`,
+      { cache: "no-store" }
+    )
+    
+    if (pythonFallbackRes.ok) {
+      const pythonResult = await pythonFallbackRes.json()
+      if (pythonResult.subtitles && Array.isArray(pythonResult.subtitles) && pythonResult.subtitles.length > 0) {
+        return NextResponse.json(
+          { 
+            subtitles: pythonResult.subtitles,
+            source: "python-fallback"
+          },
+          { status: 200 }
+        )
+      }
+    }
+  } catch (fallbackError) {
+    // Python fallback failed, continue to return error
   }
 
   // If we get here, no subtitles were found in any language
@@ -55,7 +105,8 @@ export async function GET(request: NextRequest) {
     { 
       error: "No subtitles available for this video in the requested language or fallback languages",
       videoID,
-      attemptedLanguages: languagesToTry
+      attemptedLanguages: languagesToTry,
+      note: "Both JavaScript and Python extractors were tried"
     },
     { status: 404 }
   )
