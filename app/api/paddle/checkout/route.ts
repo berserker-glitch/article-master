@@ -47,8 +47,13 @@ export async function POST(req: Request) {
     },
     body: JSON.stringify({
       items: [{ price_id: priceId, quantity: 1 }],
-      collection_mode: "automatic",
-      billing_details: { enable_checkout: true },
+      // Paddle expects billing_details to be NULL for automatic collection.
+      // To generate a hosted checkout URL, use manual collection + enable_checkout with payment_terms.
+      collection_mode: "manual",
+      billing_details: {
+        enable_checkout: true,
+        payment_terms: { interval: "day", frequency: 1 },
+      },
       customer: { email: customerEmail },
       custom_data: { userId: auth.user.id },
     }),
