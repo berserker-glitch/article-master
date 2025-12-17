@@ -77,6 +77,8 @@ export async function POST(req: Request) {
 
   const baseUrl = getBaseUrl()
 
+  // Fetch subtitles and video details using the caption-extractor library
+  // These routes use youtube-caption-extractor to get transcripts and metadata
   const [subsRes, detailsRes] = await Promise.all([
     fetch(`${baseUrl}/api/subtitles?videoID=${encodeURIComponent(videoId)}`, { cache: "no-store" }),
     fetch(`${baseUrl}/api/videoDetails?videoID=${encodeURIComponent(videoId)}`, { cache: "no-store" }),
@@ -84,19 +86,95 @@ export async function POST(req: Request) {
 
   if (!subsRes.ok) {
     const payload = await subsRes.json().catch(() => ({}))
-    return NextResponse.json({ error: payload?.error || "Failed to fetch subtitles" }, { status: 400 })
+    return NextResponse.json(
+      { 
+        error: payload?.error || "Failed to fetch subtitles",
+        status: subsRes.status,
+        videoId 
+      },
+      { status: 400 }
+    )
   }
 
   if (!detailsRes.ok) {
     const payload = await detailsRes.json().catch(() => ({}))
-    return NextResponse.json({ error: payload?.error || "Failed to fetch video details" }, { status: 400 })
+    return NextResponse.json(
+      { 
+        error: payload?.error || "Failed to fetch video details",
+        status: detailsRes.status,
+        videoId 
+      },
+      { status: 400 }
+    )
   }
 
-  const subsJson = await subsRes.json()
-  const detailsJson = await detailsRes.json()
+  const subsJson = await subsRes.json().catch(() => ({}))
+  const detailsJson = await detailsRes.json().catch(() => ({}))
 
-  const subtitles: Subtitle[] = subsJson.subtitles || []
-  const transcript = subtitles.map((s) => s.text).join(" ").trim()
+  // Extract subtitles - youtube-caption-extractor returns Subtitle[] directly
+  // but our API wraps it in { subtitles: Subtitle[] }
+  let subtitles: Subtitle[] = []
+  
+  if (Array.isArray(subsJson.subtitles)) {
+    subtitles = subsJson.subtitles
+  } else if (Array.isArray(subsJson)) {
+    // In case the API returns the array directly
+    subtitles = subsJson
+  }
+
+  // Validate subtitle structure
+  if (subtitles.length > 0) {
+    // Ensure all subtitles have the required fields
+    subtitles = subtitles
+      .map((sub: any) => {
+        if (typeof sub === "object" && sub !== null) {
+          // Handle different possible property names
+          const text = sub.text || sub.textContent || ""
+          const start = sub.start || sub.startTime || "0"
+          const dur = sub.dur || sub.duration || sub.dur || "0"
+          
+          if (text && typeof text === "string") {
+            return { start: String(start), dur: String(dur), text: String(text) }
+          }
+        }
+        return null
+      })
+      .filter((s: Subtitle | null): s is Subtitle => s !== null)
+  }
+
+  // Build transcript from subtitles
+  const transcript = subtitles.length > 0 
+    ? subtitles.map((s) => s.text).join(" ").trim()
+    : ""
+
+  // Validate that we have a transcript
+  if (!transcript) {
+    // Check if we got an error from the subtitles API
+    if (subsJson.error) {
+      return NextResponse.json(
+        { 
+          error: `Failed to get subtitles: ${subsJson.error}`,
+          videoId,
+          suggestion: "Make sure the video has captions enabled. You can check this on YouTube by clicking the CC button."
+        },
+        { status: 400 }
+      )
+    }
+    
+    return NextResponse.json(
+      { 
+        error: "No transcript available for this video. The video may not have captions enabled, or the captions may not be accessible.",
+        videoId,
+        details: {
+          subtitlesReceived: subtitles.length,
+          subsJsonKeys: Object.keys(subsJson),
+          hasSubtitlesKey: "subtitles" in subsJson,
+        },
+        suggestion: "Please ensure the YouTube video has captions enabled. You can check this by viewing the video on YouTube and looking for the CC (closed captions) button."
+      },
+      { status: 400 }
+    )
+  }
 
   const videoTitle = detailsJson?.videoDetails?.title
   const videoDescription = detailsJson?.videoDetails?.description
