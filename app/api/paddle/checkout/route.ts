@@ -10,8 +10,13 @@ const bodySchema = z.object({
 })
 
 function requireEnv(name: string) {
-  const v = process.env[name]
-  if (!v) throw new Error(`Missing ${name}`)
+  const raw = process.env[name]
+  if (!raw) throw new Error(`Missing ${name}`)
+  const v = String(raw).trim()
+  // Hosting dashboards sometimes store quotes as part of the value.
+  if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
+    return v.slice(1, -1).trim()
+  }
   return v
 }
 
@@ -45,8 +50,17 @@ export async function POST(req: Request) {
 
   const payload = await res.json().catch(() => ({}))
   if (!res.ok) {
+    const message =
+      payload?.error?.message ||
+      payload?.error?.detail ||
+      payload?.error?.description ||
+      payload?.message ||
+      "Failed to create checkout"
     return NextResponse.json(
-      { error: payload?.error?.message || payload?.message || "Failed to create checkout" },
+      {
+        error: message,
+        code: payload?.error?.code ?? payload?.code ?? null,
+      },
       { status: 400 }
     )
   }
