@@ -2,10 +2,9 @@
 NIXPACKS_PYTHON_VERSION = "3.11"
 
 [phases.setup]
-nixPkgs = ["python311", "python311Packages.pip"]
+nixPkgs = ["python311", "python311Packages.pip", "nodejs_20", "nodePackages.npm"]
 
-# Explicitly override install phase to use npm instead of bun
-# This overrides Nixpacks' auto-detection of bun from bun.lock
+# Override install phase to use npm instead of bun (which Nixpacks detects from bun.lock)
 [phases.install]
 cmds = [
   "npm install"
