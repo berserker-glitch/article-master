@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 
 import { IconArticle, IconLayoutDashboard, IconSettings, IconShield, IconCreditCard, IconSparkles } from "@tabler/icons-react"
 
@@ -17,6 +17,7 @@ import {
 
 export function AppHeader(props: { username: string; role: "USER" | "SUPERADMIN"; plan?: "FREE" | "PRO" | "PREMIUM" }) {
   const pathname = usePathname()
+  const router = useRouter()
   const isSettingsActive = pathname?.startsWith("/settings")
 
   return (
@@ -41,39 +42,31 @@ export function AppHeader(props: { username: string; role: "USER" | "SUPERADMIN"
               </span>
             </NavLink>
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  className={`px-3 py-1.5 rounded-md transition-colors ${
-                    isSettingsActive
-                      ? "bg-muted text-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
-                  }`}
-                >
-                  <span className="inline-flex items-center gap-2">
-                    <IconSettings className="h-4 w-4" />
-                    Settings
-                  </span>
-                </button>
+              <DropdownMenuTrigger
+                className={`px-3 py-1.5 rounded-md transition-colors ${
+                  isSettingsActive
+                    ? "bg-muted text-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                }`}
+              >
+                <span className="inline-flex items-center gap-2">
+                  <IconSettings className="h-4 w-4" />
+                  Settings
+                </span>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
-                <DropdownMenuItem asChild>
-                  <Link href="/settings/billing" className="flex items-center gap-2">
-                    <IconCreditCard className="h-4 w-4" />
-                    Plans & Billing
-                  </Link>
+                <DropdownMenuItem onClick={() => router.push("/settings/billing")} className="flex items-center gap-2">
+                  <IconCreditCard className="h-4 w-4" />
+                  Plans & Billing
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/settings/wordpress" className="flex items-center gap-2">
-                    <IconSettings className="h-4 w-4" />
-                    WordPress
-                  </Link>
+                <DropdownMenuItem onClick={() => router.push("/settings/wordpress")} className="flex items-center gap-2">
+                  <IconSettings className="h-4 w-4" />
+                  WordPress
                 </DropdownMenuItem>
                 {props.plan === "PREMIUM" && (
-                  <DropdownMenuItem asChild>
-                    <Link href="/settings/generation" className="flex items-center gap-2">
-                      <IconSparkles className="h-4 w-4" />
-                      Generation preferences
-                    </Link>
+                  <DropdownMenuItem onClick={() => router.push("/settings/generation")} className="flex items-center gap-2">
+                    <IconSparkles className="h-4 w-4" />
+                    Generation preferences
                   </DropdownMenuItem>
                 )}
               </DropdownMenuContent>
