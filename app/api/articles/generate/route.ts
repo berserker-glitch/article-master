@@ -52,11 +52,34 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Please paste a valid YouTube URL" }, { status: 400 })
   }
 
-  const origin = new URL(req.url).origin
+  // Get the correct base URL from headers (for proxy/production) or environment variable
+  function getBaseUrl(): string {
+    // Check for forwarded protocol and host (common in production/proxy setups)
+    const forwardedProto = req.headers.get("x-forwarded-proto")
+    const forwardedHost = req.headers.get("x-forwarded-host")
+    const host = req.headers.get("host")
+
+    if (forwardedProto && forwardedHost) {
+      return `${forwardedProto}://${forwardedHost}`
+    }
+    if (forwardedProto && host) {
+      return `${forwardedProto}://${host}`
+    }
+    if (host) {
+      // Use https if we're likely in production, http for localhost
+      const protocol = host.includes("localhost") || host.includes("127.0.0.1") ? "http" : "https"
+      return `${protocol}://${host}`
+    }
+
+    // Fallback to environment variable or localhost
+    return (process.env.APP_URL || "http://localhost:3000").replace(/\/$/, "")
+  }
+
+  const baseUrl = getBaseUrl()
 
   const [subsRes, detailsRes] = await Promise.all([
-    fetch(`${origin}/api/subtitles?videoID=${encodeURIComponent(videoId)}`, { cache: "no-store" }),
-    fetch(`${origin}/api/videoDetails?videoID=${encodeURIComponent(videoId)}`, { cache: "no-store" }),
+    fetch(`${baseUrl}/api/subtitles?videoID=${encodeURIComponent(videoId)}`, { cache: "no-store" }),
+    fetch(`${baseUrl}/api/videoDetails?videoID=${encodeURIComponent(videoId)}`, { cache: "no-store" }),
   ])
 
   if (!subsRes.ok) {
