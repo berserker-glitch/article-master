@@ -1,14 +1,24 @@
 "use client"
 
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 
-import { IconArticle, IconLayoutDashboard, IconSettings, IconShield } from "@tabler/icons-react"
+import { IconArticle, IconLayoutDashboard, IconSettings, IconShield, IconCreditCard, IconSparkles } from "@tabler/icons-react"
 
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { NavLink } from "@/components/app/nav-link"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
-export function AppHeader(props: { username: string; role: "USER" | "SUPERADMIN" }) {
+export function AppHeader(props: { username: string; role: "USER" | "SUPERADMIN"; plan?: "FREE" | "PRO" | "PREMIUM" }) {
+  const pathname = usePathname()
+  const isSettingsActive = pathname?.startsWith("/settings")
+
   return (
     <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur">
       <div className="mx-auto max-w-6xl px-6 h-16 flex items-center justify-between">
@@ -30,12 +40,44 @@ export function AppHeader(props: { username: string; role: "USER" | "SUPERADMIN"
                 Articles
               </span>
             </NavLink>
-            <NavLink href="/settings/wordpress">
-              <span className="inline-flex items-center gap-2">
-                <IconSettings className="h-4 w-4" />
-                WordPress
-              </span>
-            </NavLink>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className={`px-3 py-1.5 rounded-md transition-colors ${
+                    isSettingsActive
+                      ? "bg-muted text-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                  }`}
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <IconSettings className="h-4 w-4" />
+                    Settings
+                  </span>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuItem asChild>
+                  <Link href="/settings/billing" className="flex items-center gap-2">
+                    <IconCreditCard className="h-4 w-4" />
+                    Plans & Billing
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/settings/wordpress" className="flex items-center gap-2">
+                    <IconSettings className="h-4 w-4" />
+                    WordPress
+                  </Link>
+                </DropdownMenuItem>
+                {props.plan === "PREMIUM" && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/settings/generation" className="flex items-center gap-2">
+                      <IconSparkles className="h-4 w-4" />
+                      Generation preferences
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
             {props.role === "SUPERADMIN" && (
               <NavLink href="/admin/users">
                 <span className="inline-flex items-center gap-2">

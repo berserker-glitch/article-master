@@ -39,5 +39,5 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 
-
+/paymentGateway
 /lib/generated/prisma
