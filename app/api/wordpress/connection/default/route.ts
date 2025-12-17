@@ -4,6 +4,7 @@ import { z } from "zod"
 
 import { requireApiUser } from "@/lib/auth/api"
 import { prisma } from "@/lib/db/prisma"
+import { getEffectivePlan, isWpAllowed } from "@/lib/plans/plans"
 
 export const runtime = "nodejs"
 
@@ -14,6 +15,11 @@ const schema = z.object({
 export async function POST(req: Request) {
   const auth = await requireApiUser()
   if (auth.errorResponse) return auth.errorResponse
+
+  const plan = getEffectivePlan({ planTier: auth.user.planTier, planActiveUntil: auth.user.planActiveUntil })
+  if (!isWpAllowed(plan)) {
+    return NextResponse.json({ error: "WordPress is available on Pro and Premium plans." }, { status: 403 })
+  }
 
   const body = await req.json().catch(() => ({}))
   const parsed = schema.safeParse(body)

@@ -8,6 +8,8 @@
     bun scripts/prisma-db-push.js -- --accept-data-loss
 */
 
+/* eslint-disable @typescript-eslint/no-require-imports */
+
 const fs = require("node:fs")
 const path = require("node:path")
 const { spawn } = require("node:child_process")

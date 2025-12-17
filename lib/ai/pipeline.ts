@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma"
 import { getOpenRouter, modelFromEnv } from "@/lib/ai/openrouter"
 import { chaptersSchema, critiqueSchema } from "@/lib/ai/schemas"
 import { chaptersPrompt, critiquePrompt, expandPrompt, rewritePrompt, writerPrompt } from "@/lib/ai/prompts"
+import { getEffectivePlan, type PremiumGenerationPrefs } from "@/lib/plans/plans"
 
 const chaptersModelDefault = "google/gemini-2.0-flash-lite-001"
 const writerModelDefault = "openai/gpt-5.2"
@@ -16,16 +17,28 @@ type NormalizedUsage = {
   costUsd: number | null
 }
 
+type UnknownRecord = Record<string, unknown>
+
+function isRecord(v: unknown): v is UnknownRecord {
+  return !!v && typeof v === "object"
+}
+
+function toNumber(v: unknown) {
+  if (typeof v === "number") return Number.isFinite(v) ? v : 0
+  const n = typeof v === "string" ? Number(v) : Number(v)
+  return Number.isFinite(n) ? n : 0
+}
+
 function normalizeUsage(result: unknown): NormalizedUsage {
-  const usage = (result as any)?.usage
-  const promptTokens = Number(usage?.promptTokens ?? usage?.inputTokens ?? 0) || 0
-  const completionTokens = Number(usage?.completionTokens ?? usage?.outputTokens ?? 0) || 0
-  const totalTokens =
-    Number(usage?.totalTokens ?? usage?.total ?? 0) || promptTokens + completionTokens
-  
+  const usage = isRecord(result) && isRecord(result.usage) ? result.usage : null
+  const promptTokens = toNumber(usage?.["promptTokens"] ?? usage?.["inputTokens"] ?? 0)
+  const completionTokens = toNumber(usage?.["completionTokens"] ?? usage?.["outputTokens"] ?? 0)
+  const totalTokens = toNumber(usage?.["totalTokens"] ?? usage?.["total"] ?? 0) || promptTokens + completionTokens
+
   // OpenRouter returns actual cost in the response
-  const costUsd = Number(usage?.cost ?? (result as any)?.cost ?? 0) || null
-  
+  const costUsdRaw = usage?.["cost"] ?? (isRecord(result) ? result["cost"] : 0)
+  const costUsd = toNumber(costUsdRaw) || null
+
   return { promptTokens, completionTokens, totalTokens, costUsd }
 }
 
@@ -58,7 +71,10 @@ function estimateCostUsd(args: { modelId: string; promptTokens: number; completi
 }
 
 export async function runArticlePipeline(articleId: string) {
-  const article = await prisma.article.findUnique({ where: { id: articleId } })
+  const article = await prisma.article.findUnique({
+    where: { id: articleId },
+    include: { user: { select: { planTier: true, planActiveUntil: true, premiumGenerationPrefs: true } } },
+  })
   if (!article) return
 
   if (!article.transcript || !article.transcript.trim()) {
@@ -75,6 +91,29 @@ export async function runArticlePipeline(articleId: string) {
     let completionTokens = 0
     let totalTokens = 0
     let estimatedCostUsd = 0
+
+    const plan = getEffectivePlan({
+      planTier: article.user.planTier,
+      planActiveUntil: article.user.planActiveUntil,
+    })
+
+    const prefs =
+      plan === "PREMIUM" && article.user.premiumGenerationPrefs && typeof article.user.premiumGenerationPrefs === "object"
+        ? (article.user.premiumGenerationPrefs as unknown as PremiumGenerationPrefs)
+        : null
+
+    const extraInstructions =
+      prefs &&
+      [
+        prefs.tone ? `Tone: ${String(prefs.tone)}` : null,
+        prefs.include ? `Mention/include: ${String(prefs.include)}` : null,
+        prefs.exclude ? `Exclude/avoid: ${String(prefs.exclude)}` : null,
+        prefs.additionalNotes ? `Additional notes: ${String(prefs.additionalNotes)}` : null,
+      ]
+        .filter(Boolean)
+        .join("\n")
+
+    const seoFocusKeywords = prefs?.seoKeywords ? String(prefs.seoKeywords) : null
 
     // Progress tracking: 5 main steps (chapters=20%, draft=20%, critique=20%, rewrite=30%, expand=10%)
     await prisma.article.update({
@@ -123,6 +162,8 @@ export async function runArticlePipeline(articleId: string) {
         videoTitle: article.videoTitle,
         chaptersJson: JSON.stringify(chapters, null, 2),
         transcript: article.transcript,
+        extraInstructions: extraInstructions || null,
+        seoFocusKeywords,
       }),
     })
     const draftMarkdown = draftRes.text
@@ -186,6 +227,8 @@ export async function runArticlePipeline(articleId: string) {
       prompt: rewritePrompt({
         draftMarkdown,
         critiqueJson: JSON.stringify(critique, null, 2),
+        extraInstructions: extraInstructions || null,
+        seoFocusKeywords,
       }),
     })
     let finalMarkdown = rewriteRes.text
@@ -217,7 +260,12 @@ export async function runArticlePipeline(articleId: string) {
     if (wordCount < 1500) {
       const expandRes = await generateText({
         model: writerModel,
-        prompt: expandPrompt({ articleMarkdown: finalMarkdown, transcript: article.transcript }),
+        prompt: expandPrompt({
+          articleMarkdown: finalMarkdown,
+          transcript: article.transcript,
+          extraInstructions: extraInstructions || null,
+          seoFocusKeywords,
+        }),
       })
       finalMarkdown = expandRes.text
       {

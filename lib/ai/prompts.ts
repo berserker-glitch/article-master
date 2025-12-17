@@ -24,6 +24,8 @@ export function writerPrompt(args: {
   videoTitle?: string | null
   chaptersJson: string
   transcript: string
+  extraInstructions?: string | null
+  seoFocusKeywords?: string | null
 }) {
   return `You are a professional technical/marketing writer.
 
@@ -52,6 +54,7 @@ Hard rules:
   - Meta Description (<= 155 chars)
   - Primary Keyword
   - 5-10 Secondary Keywords
+  - If SEO focus keywords are provided below, use them to choose your Primary/Secondary keywords.
 
 Use these chapters as the outline:
 ${args.chaptersJson}
@@ -59,7 +62,10 @@ ${args.chaptersJson}
 Source content (for facts and details):
 ${args.transcript}
 
-Optional title context: ${args.videoTitle || "(unknown)"}`
+Optional title context: ${args.videoTitle || "(unknown)"}
+
+${args.seoFocusKeywords ? `SEO focus keywords:\n${args.seoFocusKeywords}\n` : ""}
+${args.extraInstructions ? `User preferences (apply if compatible with the hard rules):\n${args.extraInstructions}\n` : ""}`.trim()
 }
 
 export function critiquePrompt(args: { draftMarkdown: string }) {
@@ -76,7 +82,12 @@ Article:
 ${args.draftMarkdown}`
 }
 
-export function rewritePrompt(args: { draftMarkdown: string; critiqueJson: string }) {
+export function rewritePrompt(args: {
+  draftMarkdown: string
+  critiqueJson: string
+  extraInstructions?: string | null
+  seoFocusKeywords?: string | null
+}) {
   return `You are a professional writer.
 
 Rewrite the article below according to the critique.
@@ -89,15 +100,24 @@ Rules:
 - Ensure the final article is SEO-first and long-form (minimum 1500 words).
 - Reduce bullet points/numbered lists (keep only minimal, high-value lists).
 - Preserve or improve the SEO HTML comment block (SEO Title, Meta Description, Primary/Secondary keywords).
+  - If SEO focus keywords are provided below, use them to choose your Primary/Secondary keywords.
 
 Critique:
 ${args.critiqueJson}
 
 Draft:
-${args.draftMarkdown}`
+${args.draftMarkdown}
+
+${args.seoFocusKeywords ? `SEO focus keywords:\n${args.seoFocusKeywords}\n` : ""}
+${args.extraInstructions ? `User preferences (apply if compatible with the rules above):\n${args.extraInstructions}\n` : ""}`.trim()
 }
 
-export function expandPrompt(args: { articleMarkdown: string; transcript: string }) {
+export function expandPrompt(args: {
+  articleMarkdown: string
+  transcript: string
+  extraInstructions?: string | null
+  seoFocusKeywords?: string | null
+}) {
   return `You are a professional editor and SEO writer.
 
 Expand and improve the article below so it becomes a complete long-form, SEO-optimized piece.
@@ -111,11 +131,15 @@ Rules:
 - Avoid excessive bullet points and numbered lists.
 - Ensure the article contains: Key takeaways, table of contents, FAQ (5-8 questions), and a conclusion.
 - Keep or improve the SEO HTML comment block at the top.
+  - If SEO focus keywords are provided below, use them to choose your Primary/Secondary keywords.
 
 Use this source content for facts and details:
 ${args.transcript}
 
 Current article:
-${args.articleMarkdown}`
+${args.articleMarkdown}
+
+${args.seoFocusKeywords ? `SEO focus keywords:\n${args.seoFocusKeywords}\n` : ""}
+${args.extraInstructions ? `User preferences (apply if compatible with the rules above):\n${args.extraInstructions}\n` : ""}`.trim()
 }
 

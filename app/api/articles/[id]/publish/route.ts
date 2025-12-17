@@ -5,6 +5,7 @@ import { marked } from "marked"
 import { requireApiUser } from "@/lib/auth/api"
 import { prisma } from "@/lib/db/prisma"
 import { decryptString } from "@/lib/crypto/encryption"
+import { getEffectivePlan, isWpAllowed } from "@/lib/plans/plans"
 
 export const runtime = "nodejs"
 
@@ -21,6 +22,11 @@ function basicAuth(username: string, password: string) {
 export async function POST(req: Request, ctx: { params: Promise<{ id: string }> }) {
   const auth = await requireApiUser()
   if (auth.errorResponse) return auth.errorResponse
+
+  const plan = getEffectivePlan({ planTier: auth.user.planTier, planActiveUntil: auth.user.planActiveUntil })
+  if (!isWpAllowed(plan)) {
+    return NextResponse.json({ error: "Publishing to WordPress is available on Pro and Premium plans." }, { status: 403 })
+  }
 
   const { id } = await ctx.params
   const body = await readBody(req)

@@ -34,6 +34,12 @@ export function LandingFooter() {
               <Link className="text-muted-foreground hover:text-foreground" href="/signup">
                 Get started
               </Link>
+              <Link className="text-muted-foreground hover:text-foreground" href="/terms">
+                Terms of Service
+              </Link>
+              <Link className="text-muted-foreground hover:text-foreground" href="/refund-policy">
+                Refund Policy
+              </Link>
             </div>
           </div>
         </div>

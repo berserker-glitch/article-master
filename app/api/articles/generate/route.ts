@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma"
 import { requireApiUser } from "@/lib/auth/api"
 import { extractYoutubeVideoId } from "@/lib/youtube/video-id"
 import { runArticlePipeline } from "@/lib/ai/pipeline"
+import { enforceCanGenerateArticle } from "@/lib/plans/plans"
 import { z } from "zod"
 
 export const runtime = "nodejs"
@@ -17,6 +18,17 @@ type Subtitle = { start: string; dur: string; text: string }
 export async function POST(req: Request) {
   const auth = await requireApiUser()
   if (auth.errorResponse) return auth.errorResponse
+
+  const allowed = await enforceCanGenerateArticle(auth.user.id)
+  if (!allowed.ok) {
+    return NextResponse.json(
+      {
+        error: allowed.error,
+        ...(("plan" in allowed && allowed.plan) ? { plan: allowed.plan, used: allowed.used, max: allowed.max } : {}),
+      },
+      { status: 429 }
+    )
+  }
 
   const body = await req.json().catch(() => ({}))
   const parsed = bodySchema.safeParse(body)

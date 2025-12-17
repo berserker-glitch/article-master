@@ -47,13 +47,12 @@ function Button({
   if (asChild) {
     if (!React.isValidElement(children)) {
       if (process.env.NODE_ENV !== "production") {
-        // eslint-disable-next-line no-console
         console.warn("Button with asChild expects a single React element child.")
       }
       return null
     }
 
-    const child = children as React.ReactElement<any>
+    const child = children as React.ReactElement<{ className?: string }>
     return React.cloneElement(child, {
       "data-slot": "button",
       ...props,

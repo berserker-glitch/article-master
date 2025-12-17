@@ -5,6 +5,7 @@ import { z } from "zod"
 import { requireApiUser } from "@/lib/auth/api"
 import { prisma } from "@/lib/db/prisma"
 import { encryptString } from "@/lib/crypto/encryption"
+import { getEffectivePlan, isWpAllowed } from "@/lib/plans/plans"
 
 export const runtime = "nodejs"
 
@@ -14,9 +15,14 @@ const schema = z.object({
   appPassword: z.string().min(8),
 })
 
-export async function GET(_req: Request) {
+export async function GET() {
   const auth = await requireApiUser()
   if (auth.errorResponse) return auth.errorResponse
+
+  const plan = getEffectivePlan({ planTier: auth.user.planTier, planActiveUntil: auth.user.planActiveUntil })
+  if (!isWpAllowed(plan)) {
+    return NextResponse.json({ error: "WordPress is available on Pro and Premium plans." }, { status: 403 })
+  }
 
   const connections = await prisma.wordPressConnection.findMany({
     where: { userId: auth.user.id },
@@ -30,6 +36,11 @@ export async function GET(_req: Request) {
 export async function POST(req: Request) {
   const auth = await requireApiUser()
   if (auth.errorResponse) return auth.errorResponse
+
+  const plan = getEffectivePlan({ planTier: auth.user.planTier, planActiveUntil: auth.user.planActiveUntil })
+  if (!isWpAllowed(plan)) {
+    return NextResponse.json({ error: "WordPress is available on Pro and Premium plans." }, { status: 403 })
+  }
 
   const body = await req.json().catch(() => ({}))
   const parsed = schema.safeParse(body)
