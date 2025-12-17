@@ -34,11 +34,11 @@ function normalizeUsage(result: unknown): NormalizedUsage {
   const promptTokens = toNumber(usage?.["promptTokens"] ?? usage?.["inputTokens"] ?? 0)
   const completionTokens = toNumber(usage?.["completionTokens"] ?? usage?.["outputTokens"] ?? 0)
   const totalTokens = toNumber(usage?.["totalTokens"] ?? usage?.["total"] ?? 0) || promptTokens + completionTokens
-
+  
   // OpenRouter returns actual cost in the response
   const costUsdRaw = usage?.["cost"] ?? (isRecord(result) ? result["cost"] : 0)
   const costUsd = toNumber(costUsdRaw) || null
-
+  
   return { promptTokens, completionTokens, totalTokens, costUsd }
 }
 

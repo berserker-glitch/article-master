@@ -28,6 +28,11 @@ export async function POST(req: Request) {
   const parsed = bodySchema.safeParse(body)
   if (!parsed.success) return NextResponse.json({ error: "Invalid request" }, { status: 400 })
 
+  const customerEmail = typeof auth.user.email === "string" ? auth.user.email.trim() : ""
+  if (!customerEmail) {
+    return NextResponse.json({ error: "Missing account email" }, { status: 400 })
+  }
+
   const secretKey = requireEnv("PADDLE_SECRET_KEY")
   const priceId =
     parsed.data.plan === "premium"
@@ -44,6 +49,7 @@ export async function POST(req: Request) {
       items: [{ price_id: priceId, quantity: 1 }],
       collection_mode: "automatic",
       billing_details: { enable_checkout: true },
+      customer: { email: customerEmail },
       custom_data: { userId: auth.user.id },
     }),
   })
@@ -60,6 +66,7 @@ export async function POST(req: Request) {
       {
         error: message,
         code: payload?.error?.code ?? payload?.code ?? null,
+        details: payload?.error?.errors ?? null,
       },
       { status: 400 }
     )
