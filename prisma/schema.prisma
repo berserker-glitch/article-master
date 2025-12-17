@@ -110,6 +110,9 @@ model Article {
   estimatedCostUsd  Float?
   progress          Int?    @default(0)
 
+  // Per-article generation preferences (tone, include/exclude, SEO keywords)
+  generationPrefs   Json?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

@@ -11,6 +11,16 @@ export const runtime = "nodejs"
 
 const bodySchema = z.object({
   youtubeUrl: z.string().min(1),
+  generationPrefs: z
+    .object({
+      language: z.string().max(10).optional(),
+      tone: z.string().max(500).optional(),
+      include: z.string().max(2000).optional(),
+      exclude: z.string().max(2000).optional(),
+      additionalNotes: z.string().max(4000).optional(),
+      seoKeywords: z.string().max(1000).optional(),
+    })
+    .optional(),
 })
 
 type Subtitle = { start: string; dur: string; text: string }
@@ -77,6 +87,7 @@ export async function POST(req: Request) {
       videoTitle,
       videoDescription,
       transcript,
+      ...(parsed.data.generationPrefs ? { generationPrefs: parsed.data.generationPrefs } : {}),
     },
     select: { id: true },
   })

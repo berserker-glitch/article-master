@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Markdown } from "@/components/articles/markdown"
+import { ArticlePreferences } from "@/components/articles/article-preferences"
 
 export type ArticleDetailModel = {
   id: string
@@ -12,6 +13,7 @@ export type ArticleDetailModel = {
   finalMarkdown: string | null
   wordCount?: number | null
   estimatedCostUsd?: number | null
+  generationPrefs?: unknown
   createdAt: Date
 }
 
@@ -58,6 +60,23 @@ export function ArticleDetail(props: { article: ArticleDetailModel }) {
           )}
         </CardContent>
       </Card>
+
+      <ArticlePreferences
+        articleId={a.id}
+        initialPrefs={
+          a.generationPrefs && typeof a.generationPrefs === "object"
+            ? (a.generationPrefs as {
+                language?: string
+                tone?: string
+                include?: string
+                exclude?: string
+                additionalNotes?: string
+                seoKeywords?: string
+              })
+            : null
+        }
+        canEdit={a.status === "PENDING"}
+      />
 
       {markdown ? (
         <Card>

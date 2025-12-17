@@ -26,10 +26,15 @@ export function writerPrompt(args: {
   transcript: string
   extraInstructions?: string | null
   seoFocusKeywords?: string | null
+  language?: string
 }) {
+  const langInstruction = args.language && args.language !== "en" 
+    ? `\nIMPORTANT: Write the entire article in ${getLanguageName(args.language)}. All content, headings, and text must be in ${getLanguageName(args.language)}.`
+    : ""
+
   return `You are a professional technical/marketing writer.
 
-Write a highly focused, SEO-optimized, professional long-form article in Markdown.
+Write a highly focused, SEO-optimized, professional long-form article in Markdown.${langInstruction}
 
 Hard rules:
 - Do NOT mention you are summarizing a video or using a transcript.
@@ -87,10 +92,15 @@ export function rewritePrompt(args: {
   critiqueJson: string
   extraInstructions?: string | null
   seoFocusKeywords?: string | null
+  language?: string
 }) {
+  const langInstruction = args.language && args.language !== "en" 
+    ? `\nIMPORTANT: Write the entire article in ${getLanguageName(args.language)}. All content, headings, and text must be in ${getLanguageName(args.language)}.`
+    : ""
+
   return `You are a professional writer.
 
-Rewrite the article below according to the critique.
+Rewrite the article below according to the critique.${langInstruction}
 
 Rules:
 - Output ONLY the rewritten article in Markdown.
@@ -117,10 +127,15 @@ export function expandPrompt(args: {
   transcript: string
   extraInstructions?: string | null
   seoFocusKeywords?: string | null
+  language?: string
 }) {
+  const langInstruction = args.language && args.language !== "en" 
+    ? `\nIMPORTANT: Write the entire article in ${getLanguageName(args.language)}. All content, headings, and text must be in ${getLanguageName(args.language)}.`
+    : ""
+
   return `You are a professional editor and SEO writer.
 
-Expand and improve the article below so it becomes a complete long-form, SEO-optimized piece.
+Expand and improve the article below so it becomes a complete long-form, SEO-optimized piece.${langInstruction}
 
 Rules:
 - Output ONLY the updated article in Markdown.
@@ -143,3 +158,28 @@ ${args.seoFocusKeywords ? `SEO focus keywords:\n${args.seoFocusKeywords}\n` : ""
 ${args.extraInstructions ? `User preferences (apply if compatible with the rules above):\n${args.extraInstructions}\n` : ""}`.trim()
 }
 
+function getLanguageName(code: string): string {
+  const languages: Record<string, string> = {
+    en: "English",
+    es: "Spanish",
+    fr: "French",
+    de: "German",
+    it: "Italian",
+    pt: "Portuguese",
+    nl: "Dutch",
+    ru: "Russian",
+    ja: "Japanese",
+    zh: "Chinese",
+    ko: "Korean",
+    ar: "Arabic",
+    hi: "Hindi",
+    tr: "Turkish",
+    pl: "Polish",
+    sv: "Swedish",
+    da: "Danish",
+    no: "Norwegian",
+    fi: "Finnish",
+    cs: "Czech",
+  }
+  return languages[code] || code
+}

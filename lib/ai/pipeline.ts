@@ -73,7 +73,13 @@ function estimateCostUsd(args: { modelId: string; promptTokens: number; completi
 export async function runArticlePipeline(articleId: string) {
   const article = await prisma.article.findUnique({
     where: { id: articleId },
-    include: { user: { select: { planTier: true, planActiveUntil: true, premiumGenerationPrefs: true } } },
+    select: {
+      id: true,
+      transcript: true,
+      videoTitle: true,
+      generationPrefs: true,
+      user: { select: { planTier: true, planActiveUntil: true, premiumGenerationPrefs: true } },
+    },
   })
   if (!article) return
 
@@ -97,10 +103,21 @@ export async function runArticlePipeline(articleId: string) {
       planActiveUntil: article.user.planActiveUntil,
     })
 
-    const prefs =
+    // Use article-specific preferences if available, otherwise fall back to user-level (for backward compatibility)
+    const articlePrefs =
+      article.generationPrefs && typeof article.generationPrefs === "object"
+        ? (article.generationPrefs as unknown as PremiumGenerationPrefs)
+        : null
+
+    const userPrefs =
       plan === "PREMIUM" && article.user.premiumGenerationPrefs && typeof article.user.premiumGenerationPrefs === "object"
         ? (article.user.premiumGenerationPrefs as unknown as PremiumGenerationPrefs)
         : null
+
+    // Article-specific prefs take priority, but fall back to user-level if not set
+    const prefs = articlePrefs || userPrefs
+
+    const language = prefs?.language ? String(prefs.language) : "en"
 
     const extraInstructions =
       prefs &&
@@ -164,6 +181,7 @@ export async function runArticlePipeline(articleId: string) {
         transcript: article.transcript,
         extraInstructions: extraInstructions || null,
         seoFocusKeywords,
+        language,
       }),
     })
     const draftMarkdown = draftRes.text
@@ -251,6 +269,7 @@ export async function runArticlePipeline(articleId: string) {
         critiqueJson: JSON.stringify(critique, null, 2),
         extraInstructions: extraInstructions || null,
         seoFocusKeywords,
+        language,
       }),
     })
     let finalMarkdown = rewriteRes.text
@@ -288,6 +307,7 @@ export async function runArticlePipeline(articleId: string) {
           transcript: article.transcript,
           extraInstructions: extraInstructions || null,
           seoFocusKeywords,
+          language,
         }),
       })
       finalMarkdown = expandRes.text

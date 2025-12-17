@@ -22,6 +22,7 @@ export default async function ArticleDetailPage({ params }: { params: Promise<{ 
         finalMarkdown: true,
         wordCount: true,
         estimatedCostUsd: true,
+        generationPrefs: true,
         createdAt: true,
       },
     }),

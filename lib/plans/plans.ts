@@ -65,6 +65,7 @@ export function isWpAllowed(plan: EffectivePlan) {
 }
 
 export type PremiumGenerationPrefs = Prisma.JsonObject & {
+  language?: string
   tone?: string
   include?: string
   exclude?: string
