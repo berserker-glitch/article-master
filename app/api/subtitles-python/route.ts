@@ -22,15 +22,29 @@ export async function GET(request: NextRequest) {
     // Path to the Python script
     const scriptPath = join(process.cwd(), "caption-extractor-2", "extract.py")
     
-    // Determine Python command - prefer python3 (standard in Linux/Coolify), fallback to python
-    // In Coolify/Linux environments, python3 is typically available
+    // Try multiple Python commands in order of preference
+    // In Nixpacks/Coolify, Python might be in different locations
+    const pythonCommands = [
+      "python3",
+      "python",
+      "/nix/store/*/bin/python3", // Nix store path (wildcard won't work, but shows intent)
+      "/usr/bin/python3",
+      "/usr/local/bin/python3",
+    ]
+    
+    // For now, use python3 (most common in Linux/Coolify)
+    // If this fails, the error handler will provide helpful feedback
     const pythonCmd = process.platform === "win32" ? "python" : "python3"
     
     // Spawn Python process
     const pythonProcess = spawn(pythonCmd, [scriptPath, videoID, lang], {
       cwd: process.cwd(),
-      env: { ...process.env, PYTHONUNBUFFERED: "1" }, // Ensure unbuffered output
-      shell: process.platform === "win32", // Use shell on Windows for better command resolution
+      env: { 
+        ...process.env, 
+        PYTHONUNBUFFERED: "1",
+        PATH: process.env.PATH || "/usr/bin:/usr/local/bin:/nix/store/*/bin"
+      },
+      shell: false, // Don't use shell to get better error messages
     })
 
     let stdout = ""
@@ -45,14 +59,30 @@ export async function GET(request: NextRequest) {
     })
 
     pythonProcess.on("error", (error) => {
+      // Provide helpful error message with troubleshooting steps
+      const isENOENT = (error as NodeJS.ErrnoException).code === "ENOENT"
+      const errorMessage = isENOENT
+        ? `Python command '${pythonCmd}' not found. Python may not be installed or not in PATH.`
+        : `Failed to execute Python script: ${error.message}`
+      
       resolve(
         NextResponse.json(
           {
-            error: "Failed to execute Python script",
+            error: errorMessage,
             details: error.message,
-            suggestion: "Make sure Python is installed and youtube-transcript-api is installed (pip install youtube-transcript-api)",
+            suggestion: isENOENT
+              ? "Python needs to be installed in the deployment environment. Check nixpacks.toml configuration and ensure Python is included in the build."
+              : "Make sure Python is installed and youtube-transcript-api is installed (pip install youtube-transcript-api)",
             videoID,
             pythonCommand: pythonCmd,
+            platform: process.platform,
+            path: process.env.PATH,
+            troubleshooting: {
+              step1: "Verify nixpacks.toml includes python3 in nixPkgs",
+              step2: "Check build logs for Python installation",
+              step3: "Ensure pip install ran successfully during build",
+              step4: "Try adding Python to PATH in environment variables"
+            }
           },
           { status: 500 }
         )
