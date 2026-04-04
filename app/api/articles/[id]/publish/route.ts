@@ -1,4 +1,7 @@
 import { NextResponse } from "next/server"
+import { promises as fs } from "fs"
+import path from "path"
+import FormData from "form-data"
 
 import { marked } from "marked"
 
@@ -35,7 +38,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
   const [article, wp] = await Promise.all([
     prisma.article.findFirst({
       where: { id, userId: auth.user.id },
-      select: { id: true, videoTitle: true, finalMarkdown: true },
+      select: { id: true, videoTitle: true, finalMarkdown: true, imagePath: true },
     }),
     requestedConnectionId
       ? prisma.wordPressConnection.findFirst({ where: { id: requestedConnectionId, userId: auth.user.id } })
@@ -62,17 +65,89 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
   const html = await marked.parse(article.finalMarkdown)
   const title = article.videoTitle || "Article"
 
+  // Upload image to WordPress if available
+  let featuredMediaId: number | null = null
+  if (article.imagePath) {
+    try {
+      const imageFullPath = path.join(process.cwd(), article.imagePath)
+      
+      // Check if image file exists
+      try {
+        await fs.access(imageFullPath)
+      } catch {
+        console.error(`Image file not found: ${imageFullPath}`)
+      }
+
+      // Read image file
+      const imageBuffer = await fs.readFile(imageFullPath)
+      const imageFilename = path.basename(article.imagePath)
+      const imageExtension = path.extname(imageFilename).slice(1) || "png"
+      const mimeType = imageExtension === "jpg" || imageExtension === "jpeg" 
+        ? "image/jpeg" 
+        : imageExtension === "png" 
+        ? "image/png" 
+        : imageExtension === "webp"
+        ? "image/webp"
+        : "image/png"
+
+      // Create FormData for WordPress media upload
+      const formData = new FormData()
+      
+      // Append file buffer
+      formData.append("file", imageBuffer, {
+        filename: imageFilename,
+        contentType: mimeType,
+      })
+      formData.append("title", title)
+      formData.append("caption", "")
+      formData.append("description", "")
+
+      // Upload to WordPress media library
+      const mediaRes = await fetch(`${siteUrl}/wp-json/wp/v2/media`, {
+        method: "POST",
+        headers: {
+          authorization: basicAuth(wp.username, appPassword),
+          ...formData.getHeaders(),
+        },
+        body: formData as any,
+      })
+
+      if (mediaRes.ok) {
+        const mediaData = await mediaRes.json()
+        featuredMediaId = mediaData.id
+      } else {
+        const mediaError = await mediaRes.json().catch(() => ({}))
+        console.error("Failed to upload image to WordPress:", mediaError)
+        // Continue publishing without image if upload fails
+      }
+    } catch (imageError) {
+      console.error("Error uploading image to WordPress:", imageError)
+      // Continue publishing without image if upload fails
+    }
+  }
+
+  const postData: {
+    title: string
+    content: string
+    status: string
+    featured_media?: number
+  } = {
+    title,
+    content: html,
+    status: "publish",
+  }
+
+  if (featuredMediaId !== null) {
+    postData.featured_media = featuredMediaId
+  }
+
   const res = await fetch(`${siteUrl}/wp-json/wp/v2/posts`, {
     method: "POST",
     headers: {
       authorization: basicAuth(wp.username, appPassword),
       "content-type": "application/json",
     },
-    body: JSON.stringify({
-      title,
-      content: html,
-      status: "publish",
-    }),
+    body: JSON.stringify(postData),
   })
 
   const wpBody = await res.json().catch(() => ({}))

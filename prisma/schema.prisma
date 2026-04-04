@@ -113,6 +113,9 @@ model Article {
   // Per-article generation preferences (tone, include/exclude, SEO keywords)
   generationPrefs   Json?
 
+  // Generated image path
+  imagePath         String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

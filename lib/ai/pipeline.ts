@@ -5,6 +5,7 @@ import { getOpenRouter, modelFromEnv } from "@/lib/ai/openrouter"
 import { chaptersSchema, critiqueSchema } from "@/lib/ai/schemas"
 import { chaptersPrompt, critiquePrompt, expandPrompt, rewritePrompt, writerPrompt } from "@/lib/ai/prompts"
 import { getEffectivePlan, type PremiumGenerationPrefs } from "@/lib/plans/plans"
+import { generateArticleImage } from "@/lib/ai/image-generation"
 
 const chaptersModelDefault = "google/gemini-2.0-flash-lite-001"
 const writerModelDefault = "openai/gpt-5.2"
@@ -213,6 +214,20 @@ export async function runArticlePipeline(articleId: string) {
     // - PREMIUM: full pipeline + user prefs + stronger expansion threshold
     if (plan === "FREE") {
       const wordCount = countWords(draftMarkdown)
+      
+      // Generate article image for FREE plan too
+      let imagePath: string | null = null
+      try {
+        imagePath = await generateArticleImage({
+          articleTitle: article.videoTitle || "Article",
+          articleContent: draftMarkdown,
+          articleId,
+        })
+      } catch (imageError) {
+        console.error("Failed to generate article image:", imageError)
+        // Continue without image if generation fails
+      }
+
       await prisma.article.update({
         where: { id: articleId },
         data: {
@@ -224,6 +239,7 @@ export async function runArticlePipeline(articleId: string) {
           completionTokens,
           totalTokens,
           estimatedCostUsd: Number.isFinite(estimatedCostUsd) ? estimatedCostUsd : null,
+          imagePath,
         },
       })
       return
@@ -330,6 +346,19 @@ export async function runArticlePipeline(articleId: string) {
       wordCount = countWords(finalMarkdown)
     }
 
+    // Generate article image
+    let imagePath: string | null = null
+    try {
+      imagePath = await generateArticleImage({
+        articleTitle: article.videoTitle || "Article",
+        articleContent: finalMarkdown,
+        articleId,
+      })
+    } catch (imageError) {
+      console.error("Failed to generate article image:", imageError)
+      // Continue without image if generation fails
+    }
+
     await prisma.article.update({
       where: { id: articleId },
       data: {
@@ -341,6 +370,7 @@ export async function runArticlePipeline(articleId: string) {
         completionTokens,
         totalTokens,
         estimatedCostUsd: Number.isFinite(estimatedCostUsd) ? estimatedCostUsd : null,
+        imagePath,
       },
     })
   } catch (err) {
